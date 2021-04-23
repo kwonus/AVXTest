@@ -89,7 +89,7 @@ void demonstrateFindingWordsInVerses(CLexIndex& clex)
 
 int main()
 {
-	initialize("C:/Users/kevin/clarity/Digital-AV/sandbox/Z-14/");
+	initialize("C:/src/Digital-AV/z-series/");
 
 	std::cout << "Test Basic Actions:\n";
 	basicActions();
