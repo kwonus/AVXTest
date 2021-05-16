@@ -1,6 +1,8 @@
 ﻿// AVXTest.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include "AVXTest.h"
+#include <SearchRequest.h>
+#include <fivebitencoding.h>
 
 void basicActions()
 {
@@ -87,6 +89,37 @@ void demonstrateFindingWordsInVerses(CLexIndex& clex)
 	} while (writ->transition != 0xFC);
 }
 
+void demonstrateReverseLexLookups(char * word)
+{
+//	std::unordered_map<UINT64, Bucket*>& map1 = *getReverseLemmaMap();
+	std::unordered_map<UINT64, Bucket*>& map2 = *getReverseModernMap();
+	std::unordered_map<UINT64, UINT16>& map3 = *getReverseSearchMap();
+//	std::unordered_map<UINT64, UINT16>& map4 = *getReverseNameMap();
+
+	char output[64];
+	UINT64 hash = Hash64(word);
+	UINT16 search = map3.at(hash);
+	std::cout << "\tReverse Search map for '" << word << "':\n";
+	std::cout << "\t\t" << search  << "\n";
+
+	Bucket* bucket = map2.at(hash);
+	std::cout << "\tReverse Modern map for '" << word << "':\n";
+	UINT16 modern = bucket->value;
+	std::cout << "\t\t" << modern << "\n";
+	for (BucketOverflow* next = bucket->overflow; next != NULL; next = next->next)
+	{
+		modern = next->value;
+		std::cout << "\t\t" << modern << "\n";
+	}
+}
+void demonstrateForwardLemmaLookup(UINT16 key)
+{
+	std::unordered_map<UINT16, char*>& map = *getForwardLemmaMap();
+	char* val = map.at(key);
+	std::cout << "\tForward search result':\n";
+	std::cout << "\t\t" <<val << "\n";
+}
+
 int main()
 {
 	initialize("C:/src/Digital-AV/z-series/");
@@ -113,5 +146,26 @@ int main()
 	std::cout << "\nDemonstrate finding words in verses:\n";
 	demonstrateFindingWordsInVerses(clex);
 
+	char* run = "Run";
+	std::cout << "\nDemonstrate reverse lex lookup (Run):\n";
+	demonstrateReverseLexLookups(run);
+
+	std::cout << "\nDemonstrate forward lemma lookup (O/Oh):\n";
+	demonstrateForwardLemmaLookup(3);
+
 	release();
+
+	SearchFragment frag;
+	frag.positionAspects = { 0 };
+	frag.text = "a&b|c";
+	SearchClause clause;
+	clause.segment = frag.text;
+	clause.fragments = { &frag };
+	clause.polarity = '+';
+	SearchRequest req;
+	req.clauses = { &clause };
+	req.count = 1;
+
+	auto search = new CSearchRequest(req);
+	std::cout << "ok";
 }
